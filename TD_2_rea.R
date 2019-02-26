@@ -258,9 +258,9 @@ abline(0,1)
 param = ana_branche(data,'toutes branches')
 
 #OEP estimation:
-simu<-rnbinom(10000,size=param$n,prob=param$p)
+simu<-rnbinom(1000,size=param$n,prob=param$p)
 year<-rep(1,simu[1])
-for(i in 2:10000){year<-c(year,rep(i,simu[i]))}  #Monte-Carlo: simuler un nb de sinistres à chaque fois
+for(i in 2:1000){year<-c(year,rep(i,simu[i]))}  #Monte-Carlo: simuler un nb de sinistres à chaque fois
 simu_claim<-cbind(year,qpareto(runif(sum(simu)),1000000,alpha)) #simuler la sévérité 
 
 #Combien le reassureur va payer pour le sinistre x avec le contrat aXSb (la récupération)
@@ -271,7 +271,9 @@ aXSb<-function(a,b,x)
 simu_claim = as.data.frame(simu_claim)
 colnames(simu_claim) = c('Year','Cost')
 
-simu_claim$recup = rep(0,nrow(simu_claim))
-for (i in 1:nrow(simu_claim))
-  simu_claim$recup[i] = aXSb(7500000,7500000,simu_claim$Cost[i])
-
+# simu_claim$recup = rep(0,nrow(simu_claim))
+# for (i in 1:nrow(simu_claim))
+#   simu_claim$recup[i] = aXSb(7500000,7500000,simu_claim$Cost[i])
+# 
+# plot(simu_claim$Cost,simu_claim$recup,type='l')
+# mean(simu_claim$recup)
