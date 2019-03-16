@@ -123,4 +123,4 @@ perte_sinis = apply(perte,1,sum) #perte par seisme
 perte_site = apply(perte,2,sum) #perte par site
 
 plot(h,perte_sinis,main='Perte par seisme',xlab = 'magnitude')
-plot(perte_site)
+plot(perte_site, main = 'Perte par site')
