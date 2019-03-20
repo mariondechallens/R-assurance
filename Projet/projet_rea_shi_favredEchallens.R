@@ -45,9 +45,11 @@ police_bande = sample(1:n_bande,N,rep(1/n_bande,n_bande),replace = TRUE)
 simu = data.frame(bande = police_bande, DR = rmbbefd(N, a = esti[1], esti[2]))
 plot(ecdf(simu$DR))
 
-# b. Fit loi de sévérité
-seuil = 5e3
-loss_insured = prof$ExposureAxaShare[prof$ExposureAxaShare >= seuil]  #?
+# b. Fit loi de sévérité #pas sure 
+seuil = 5e6
+prof$id_bd = rep(1:21) #indice des bandes
+bd_seuil = subset(prof,prof$MinExpo >=seuil)$id_bd
+DR_seuil = subset(simu,simu$bande %in% bd_seuil)$DR
 
 pareto<-function(x,u,alpha)
 {
@@ -57,7 +59,7 @@ pareto<-function(x,u,alpha)
 
 #Moment estimation
 u=1000000
-alpha=mean(loss_insured)/(mean(loss_insured)-u)
+alpha=mean(DR_seuil)/(mean(DR_seuil)-u)
 
 qpareto<-function(p,u,alpha)
 {
@@ -66,14 +68,38 @@ qpareto<-function(p,u,alpha)
 }
 #QQplot:
 q=seq(0,1,by=1/31)
-qqplot(loss_insured,qpareto(q,u,alpha))
+qqplot(DR_seuil,qpareto(q,u,alpha))
 abline(0,1)
 
 #c. Loss Ratio
 LR = 0.7
-nb_tot = 
-
+DR_mean = mean(simu$DR)
+prof$exp_nb_loss = LR*prof$EarnedPremium/DR_mean
+total_exp_nb = mean(prof$exp_nb_loss)
 
 
 
 #d. cotation, prime pure et prime tech
+traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
+  data$recov = pmin(pmax(data$LossTotal-franchise, 0), portee)
+  data_ag = aggregate(data[,c("LossTotal", "recov")], by=list(data$UsualEndorsementId), FUN=sum)
+  data_ag$recov_net = pmin(pmax(data_ag$recov,0), portee*(1+nb_reco)) #AAL = (n+1)*b
+  prime_pure = mean(data_ag$recov_net)/(1+mean(data_ag$recov_net)/portee*taux_reco)
+  prime_tech = (prime_pure + 0.2*sd(data_ag$recov_net))/(1-0.15)
+  
+  data_ag$net_loss = data_ag$loss - data_ag$recov_net
+  cout_reass = (1-0.33)*(prime_tech - prime_pure)
+  capital_gain = (quantile(data_ag$loss, 0.995)-mean(data_ag$loss)) - (quantile(data_ag$net_loss, 0.995)-mean(data_ag$net_loss))
+  val = 0.06*capital_gain-cout_reass 
+  return(list('val' = val,'PP' = prime_pure, 'PT' = prime_tech))
+}
+
+franchise = c(5e6,10e6,30e6,50e6,100e6)
+portee = c(5e6,20e6,20e6,50e6,50e6)
+reco = c(2,2,2,1,1)
+
+for (i in 1:5)
+{
+  print(paste0('Traité ',portee[i],'XS',franchise[i],' ',reco[i],'@0'))
+  print(traiteXS(loss_endo,franchise[i],portee[i],reco[i],0))
+}
