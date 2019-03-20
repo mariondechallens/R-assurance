@@ -13,13 +13,14 @@ endo = read.csv2('Endorsement.csv')
 loss_endo = merge(endo, loss, by="UsualEndorsementId")
 
 # a. moy et med
-mean(loss_endo$LossTotal / loss_endo$Exposure)  # moyenne à 0,658%
-median(loss_endo$LossTotal / loss_endo$Exposure)  # mediane À 0,032%
+mean(loss_endo$LossTotal / loss_endo$Exposure)*100  # moyenne à 0,658%
+median(loss_endo$LossTotal / loss_endo$Exposure)*100  # mediane À 0,032%
 
 # b. fit
 library(mbbefd)
 loss_endo$DR = loss_endo$LossTotal / loss_endo$Exposure
 loss_endo2 = subset(loss_endo, loss_endo$DR <=1) #la fonction de veut pas >= 1
+# il y a une ligne où le taux dépasse 1
 f1 =  fitDR(loss_endo2$DR, "mbbefd", method="mle")
 summary(f1)
 
