@@ -27,12 +27,53 @@ b1 = bootDR(f1, niter=20)
 summary(b1)
 
 #quantiles et densite
-denscomp(f1, demp=TRUE)
+denscomp(f1, demp=TRUE) # on en voit pas grand chose
 plot(b1, enhance=TRUE)
-cdfcomp(f1)
+cdfcomp(f1) #bon
 
 #courbe d'exposition
-eccomp(f1, do.points=FALSE)
+eccomp(f1, do.points=FALSE) # pas mal
 
 #### Question 3 ----
-# a. 
+# a. Simulation
+N = 10000
+n_bande = nrow(prof)
+# loi uniforme des polices sur les bandes [1-21]
+# loi de DR
+esti = f1$estimate
+police_bande = sample(1:n_bande,N,rep(1/n_bande,n_bande),replace = TRUE)
+simu = data.frame(bande = police_bande, DR = rmbbefd(N, a = esti[1], esti[2]))
+plot(ecdf(simu$DR))
+
+# b. Fit loi de sévérité
+seuil = 5e3
+loss_insured = prof$ExposureAxaShare[prof$ExposureAxaShare >= seuil]  #?
+
+pareto<-function(x,u,alpha)
+{
+  f=1-(u/x)^alpha
+  return(f)
+}
+
+#Moment estimation
+u=1000000
+alpha=mean(loss_insured)/(mean(loss_insured)-u)
+
+qpareto<-function(p,u,alpha)
+{
+  f=u*(1-p)^(-1/alpha)
+  return(f)
+}
+#QQplot:
+q=seq(0,1,by=1/31)
+qqplot(loss_insured,qpareto(q,u,alpha))
+abline(0,1)
+
+#c. Loss Ratio
+LR = 0.7
+nb_tot = 
+
+
+
+
+#d. cotation, prime pure et prime tech
