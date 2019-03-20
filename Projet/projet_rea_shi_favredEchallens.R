@@ -13,14 +13,14 @@ endo = read.csv2('Endorsement.csv')
 loss_endo = merge(endo, loss, by="UsualEndorsementId")
 
 # a. moy et med
-mean(loss_endo$LossTotal / loss_endo$Exposure)*100  # moyenne à 0,658%
-median(loss_endo$LossTotal / loss_endo$Exposure)*100  # mediane À 0,032%
+mean(loss_endo$LossTotal / loss_endo$Exposure)*100  # moyenne ? 0,658%
+median(loss_endo$LossTotal / loss_endo$Exposure)*100  # mediane ? 0,032%
 
 # b. fit
 library(mbbefd)
 loss_endo$DR = loss_endo$LossTotal / loss_endo$Exposure
 loss_endo2 = subset(loss_endo, loss_endo$DR <=1) #la fonction de veut pas >= 1
-# il y a une ligne où le taux dépasse 1
+# il y a une ligne o? le taux d?passe 1
 f1 =  fitDR(loss_endo2$DR, "mbbefd", method="mle")
 summary(f1)
 
@@ -46,11 +46,31 @@ police_bande = sample(1:n_bande,N,rep(1/n_bande,n_bande),replace = TRUE)
 simu = data.frame(bande = police_bande, DR = rmbbefd(N, a = esti[1], esti[2]))
 plot(ecdf(simu$DR))
 
-# b. Fit loi de sévérité #pas sure 
+# b. Fit loi de s?v?rit? #pas sure 
 seuil = 5e6
 prof$id_bd = rep(1:21) #indice des bandes
 bd_seuil = subset(prof,prof$MinExpo >=seuil)$id_bd
 DR_seuil = subset(simu,simu$bande %in% bd_seuil)$DR
+
+
+### PARTIE 3B AVEC PERTES BRUTES ###
+
+simu$perte = simu$DR * max(prof$MaxExpo)  # pertes brutes (dÃ©normalisÃ©es)
+
+# b. Fit loi de sÃ©vÃ©ritÃ©
+seuil = 5e3 #ou 5e6 selon ce qu'on comprend par "5m"...
+
+loss_insured2 = simu$perte[simu$perte >= seuil]  # pertes brutes dÃ©passant le seuil
+
+#install.packages("eva") # package pour Ã©valuation des valeurs extrÃªmes
+
+library(eva)
+
+mle_fit <- gpdFit(loss_insured2, threshold = seuil, method = "mle") # estimation des coeffs du GPD
+q = seq(1e-10, 1 - 1e-10, by=1/length(loss_insured2))  #0 et 1 n'existent pas pour le quantile !
+qqplot(simu$perte, qgpd(q, loc=seuil, scale=mle_fit$par.ests[1], shape=mle_fit$par.ests[2]))
+
+### FIN PARTIE 3B AVEC PERTES BRUTES ###
 
 pareto<-function(x,u,alpha)
 {
@@ -101,6 +121,6 @@ reco = c(2,2,2,1,1)
 
 for (i in 1:5)
 {
-  print(paste0('Traité ',portee[i],'XS',franchise[i],' ',reco[i],'@0'))
+  print(paste0('Trait? ',portee[i],'XS',franchise[i],' ',reco[i],'@0'))
   print(traiteXS(loss_endo,franchise[i],portee[i],reco[i],0))
 }
