@@ -19,18 +19,20 @@ median(loss_endo$LossTotal / loss_endo$Exposure)  # mediane À 0,032%
 # b. fit
 library(mbbefd)
 loss_endo$DR = loss_endo$LossTotal / loss_endo$Exposure
-f1 =  fitDR(loss_endo$DR, "mbbefd", method="mle")
+loss_endo2 = subset(loss_endo, loss_endo$DR <=1) #la fonction de veut pas >= 1
+f1 =  fitDR(loss_endo2$DR, "mbbefd", method="mle")
 summary(f1)
 
 b1 = bootDR(f1, niter=20)
 summary(b1)
+
 #quantiles et densite
 denscomp(f1, demp=TRUE)
 plot(b1, enhance=TRUE)
 cdfcomp(f1)
 
 #courbe d'exposition
-eccomp(f1, leg=c("mbbefd", "oibeta", "oiunif"), do.points=FALSE)
+eccomp(f1, do.points=FALSE)
 
 #### Question 3 ----
 # a. 
