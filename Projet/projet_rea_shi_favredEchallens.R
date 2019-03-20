@@ -46,51 +46,34 @@ police_bande = sample(1:n_bande,N,rep(1/n_bande,n_bande),replace = TRUE)
 simu = data.frame(bande = police_bande, DR = rmbbefd(N, a = esti[1], esti[2]))
 plot(ecdf(simu$DR))
 
-# b. Fit loi de s?v?rit? #pas sure 
-seuil = 5e6
-prof$id_bd = rep(1:21) #indice des bandes
-bd_seuil = subset(prof,prof$MinExpo >=seuil)$id_bd
-DR_seuil = subset(simu,simu$bande %in% bd_seuil)$DR
-
 
 ### PARTIE 3B AVEC PERTES BRUTES ###
 
 simu$perte = simu$DR * max(prof$MaxExpo)  # pertes brutes (dénormalisées)
-
+prof$id_bd = rep(1:21) #
+simu$perte2 = rep(0,nrow(simu))
+for (i in 1:N)
+{
+  simu$perte2[i] = simu$DR[i]*prof$MaxExpo[simu$bande[i]]
+}
 # b. Fit loi de sévérité
 seuil = 5e3 #ou 5e6 selon ce qu'on comprend par "5m"...
 
 loss_insured2 = simu$perte[simu$perte >= seuil]  # pertes brutes dépassant le seuil
-
+loss_insured3 = simu$perte2[simu$perte2 >= seuil]
 #install.packages("eva") # package pour évaluation des valeurs extrêmes
 
 library(eva)
 
-mle_fit <- gpdFit(loss_insured2, threshold = seuil, method = "mle") # estimation des coeffs du GPD
+mle_fit = gpdFit(loss_insured2, threshold = seuil, method = "mle") # estimation des coeffs du GPD
 q = seq(1e-10, 1 - 1e-10, by=1/length(loss_insured2))  #0 et 1 n'existent pas pour le quantile !
 qqplot(simu$perte, qgpd(q, loc=seuil, scale=mle_fit$par.ests[1], shape=mle_fit$par.ests[2]))
 
+mle_fit = gpdFit(loss_insured3, threshold = seuil, method = "mle") # estimation des coeffs du GPD
+q = seq(1e-10, 1 - 1e-10, by=1/length(loss_insured3))  #0 et 1 n'existent pas pour le quantile !
+qqplot(simu$perte, qgpd(q, loc=seuil, scale=mle_fit$par.ests[1], shape=mle_fit$par.ests[2]))
+
 ### FIN PARTIE 3B AVEC PERTES BRUTES ###
-
-pareto<-function(x,u,alpha)
-{
-  f=1-(u/x)^alpha
-  return(f)
-}
-
-#Moment estimation
-u=1000000
-alpha=mean(DR_seuil)/(mean(DR_seuil)-u)
-
-qpareto<-function(p,u,alpha)
-{
-  f=u*(1-p)^(-1/alpha)
-  return(f)
-}
-#QQplot:
-q=seq(0,1,by=1/31)
-qqplot(DR_seuil,qpareto(q,u,alpha))
-abline(0,1)
 
 #c. Loss Ratio
 LR = 0.7
@@ -98,7 +81,8 @@ DR_mean = mean(simu$DR)
 prof$exp_nb_loss = LR*prof$EarnedPremium/DR_mean
 total_exp_nb = mean(prof$exp_nb_loss)
 
-
+DR_mean_seuil = mean(subset(simu,simu$perte >=seuil)$DR)
+prof$exp_nb_loss_seuil = rep()
 
 #d. cotation, prime pure et prime tech
 traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
