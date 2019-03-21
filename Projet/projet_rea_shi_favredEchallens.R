@@ -28,7 +28,7 @@ b1 = bootDR(f1, niter=20)
 summary(b1)
 
 #quantiles et densite
-denscomp(f1, demp=TRUE) # on en voit pas grand chose
+denscomp(f1, demp=TRUE) # on ne voit pas grand chose
 plot(b1, enhance=TRUE)
 cdfcomp(f1) #bon
 
@@ -43,8 +43,8 @@ n_bande = nrow(prof)
 # loi de DR
 esti = f1$estimate
 police_bande = sample(1:n_bande,N,rep(1/n_bande,n_bande),replace = TRUE)
-simu = data.frame(bande = police_bande, DR = rmbbefd(N, a = esti[1], esti[2]))
-plot(ecdf(simu$DR))
+simu = data.frame(bande = police_bande, DR = rmbbefd(N, a = esti[1], b = esti[2]))
+plot(ecdf(simu$DR),main = 'ECDF simulation')
 
 
 ### PARTIE 3B AVEC PERTES BRUTES ###
