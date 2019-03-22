@@ -12,11 +12,11 @@ endo = read.csv2('Endorsement.csv')
 # fusion des dataframes sur les pertes (loss) et expositions (endo) sur le numero de police
 loss_endo = merge(endo, loss, by="UsualEndorsementId")
 
-# a. moyenne et médiane sous l'outlier où LossTotal > Exposure
-mean(loss_endo$LossTotal[loss_endo$LossTotal <= loss_endo$Exposure] /
-       loss_endo$Exposure[loss_endo$LossTotal <= loss_endo$Exposure])*100  # moyenne de 0,621%
-median(loss_endo$LossTotal[loss_endo$LossTotal <= loss_endo$Exposure] /
-         loss_endo$Exposure[loss_endo$LossTotal <= loss_endo$Exposure])*100  # mediane de 0,032%
+# a. moyenne et médiane sous l'outlier ou LossTotal > Exposure
+m = mean(loss_endo$LossTotal[loss_endo$LossTotal <= loss_endo$Exposure] /
+       loss_endo$Exposure[loss_endo$LossTotal <= loss_endo$Exposure])  # moyenne de 0,621%
+med = median(loss_endo$LossTotal[loss_endo$LossTotal <= loss_endo$Exposure] /
+         loss_endo$Exposure[loss_endo$LossTotal <= loss_endo$Exposure])  # mediane de 0,032%
 
 # b. fit
 library(mbbefd)
@@ -64,7 +64,7 @@ for (i in 1:N)
 }
 
 # b. Fit loi de sévérité
-seuil = 5e3 #ou 5e6 selon ce qu'on comprend par "5m"...
+seuil = 5e6 #ou 5e6 selon ce qu'on comprend par "5m"...
 
 loss_insured = simu$perte[simu$perte >= seuil]  # pertes brutes dépassant le seuil
 loss_insured2 = simu$perte2[simu$perte2 >= seuil]
@@ -90,6 +90,7 @@ qqplot(simu$perte, qgpd(q, loc=seuil, scale=mle_fit3$par.ests[1], shape=mle_fit3
 #c. Loss Ratio
 LR = 0.7
 DR_mean = mean(simu$DR)
+DR_med = median(simu$DR)
 prof$exp_nb_loss = LR*prof$EarnedPremium/DR_mean
 total_exp_nb = mean(prof$exp_nb_loss)
 
@@ -105,15 +106,15 @@ prof$exp_nb_loss_seuil = LR*prof$EarnedPremium/DR_mean_seuil
 
 #d. cotation, prime pure et prime tech
 traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
-  data$recov = pmin(pmax(data$LossTotal-franchise, 0), portee)
-  data_ag = aggregate(data[,c("LossTotal", "recov")], by=list(data$UsualEndorsementId), FUN=sum)
+  data$recov = pmin(pmax(data$perte3-franchise, 0), portee)
+  data_ag = aggregate(data[,c("perte", "recov")], by=list(data$bande), FUN=sum)
   data_ag$recov_net = pmin(pmax(data_ag$recov,0), portee*(1+nb_reco)) #AAL = (n+1)*b
   prime_pure = mean(data_ag$recov_net)/(1+mean(data_ag$recov_net)/portee*taux_reco)
   prime_tech = (prime_pure + 0.2*sd(data_ag$recov_net))/(1-0.15) #chargement
   
-  data_ag$net_loss = data_ag$loss - data_ag$recov_net
+  data_ag$net_loss = data_ag$perte - data_ag$recov_net
   cout_reass = (1-0.33)*(prime_tech - prime_pure)
-  capital_gain = (quantile(data_ag$loss, 0.995)-mean(data_ag$loss)) - (quantile(data_ag$net_loss, 0.995)-mean(data_ag$net_loss))
+  capital_gain = (quantile(data_ag$perte, 0.995)-mean(data_ag$perte)) - (quantile(data_ag$net_loss, 0.995)-mean(data_ag$net_loss))
   val = 0.06*capital_gain-cout_reass 
   return(list('val' = val,'PP' = prime_pure, 'PT' = prime_tech))
 }
@@ -125,5 +126,5 @@ reco = c(2,2,2,1,1)
 for (i in 1:5)
 {
   print(paste0('Traite ',portee[i],'XS',franchise[i],' ',reco[i],'@0'))
-  print(traiteXS(loss_endo,franchise[i],portee[i],reco[i],0))
+  print(traiteXS(simu,franchise[i],portee[i],reco[i],0))
 }
