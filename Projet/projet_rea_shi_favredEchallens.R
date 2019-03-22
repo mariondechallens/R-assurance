@@ -56,14 +56,13 @@ for (i in 1:N)
 {
   simu$perte2[i] = simu$DR[i]*prof$MaxExpo[simu$bande[i]]
 }
-# b. Fit loi de sévérité
+# b. Fit loi de severite
 seuil = 5e3 #ou 5e6 selon ce qu'on comprend par "5m"...
 
-loss_insured2 = simu$perte[simu$perte >= seuil]  # pertes brutes dépassant le seuil
+loss_insured2 = simu$perte[simu$perte >= seuil]  # pertes brutes depassant le seuil
 loss_insured3 = simu$perte2[simu$perte2 >= seuil]
-#install.packages("eva") # package pour évaluation des valeurs extrêmes
 
-library(eva)
+library(eva) # package pour evaluation des valeurs extremes
 
 mle_fit = gpdFit(loss_insured2, threshold = seuil, method = "mle") # estimation des coeffs du GPD
 q = seq(1e-10, 1 - 1e-10, by=1/length(loss_insured2))  #0 et 1 n'existent pas pour le quantile !
@@ -82,7 +81,7 @@ prof$exp_nb_loss = LR*prof$EarnedPremium/DR_mean
 total_exp_nb = mean(prof$exp_nb_loss)
 
 DR_mean_seuil = mean(subset(simu,simu$perte >=seuil)$DR)
-prof$exp_nb_loss_seuil = rep()
+prof$exp_nb_loss_seuil = LR*prof$EarnedPremium/DR_mean_seuil
 
 #d. cotation, prime pure et prime tech
 traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
@@ -90,7 +89,7 @@ traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
   data_ag = aggregate(data[,c("LossTotal", "recov")], by=list(data$UsualEndorsementId), FUN=sum)
   data_ag$recov_net = pmin(pmax(data_ag$recov,0), portee*(1+nb_reco)) #AAL = (n+1)*b
   prime_pure = mean(data_ag$recov_net)/(1+mean(data_ag$recov_net)/portee*taux_reco)
-  prime_tech = (prime_pure + 0.2*sd(data_ag$recov_net))/(1-0.15)
+  prime_tech = (prime_pure + 0.2*sd(data_ag$recov_net))/(1-0.15) #chargement
   
   data_ag$net_loss = data_ag$loss - data_ag$recov_net
   cout_reass = (1-0.33)*(prime_tech - prime_pure)
@@ -105,6 +104,6 @@ reco = c(2,2,2,1,1)
 
 for (i in 1:5)
 {
-  print(paste0('Trait? ',portee[i],'XS',franchise[i],' ',reco[i],'@0'))
+  print(paste0('Traite ',portee[i],'XS',franchise[i],' ',reco[i],'@0'))
   print(traiteXS(loss_endo,franchise[i],portee[i],reco[i],0))
 }
