@@ -111,12 +111,8 @@ traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
   data_ag$recov_net = pmin(pmax(data_ag$recov,0), portee*(1+nb_reco)) #AAL = (n+1)*b
   prime_pure = mean(data_ag$recov_net)/(1+mean(data_ag$recov_net)/portee*taux_reco)
   prime_tech = (prime_pure + 0.2*sd(data_ag$recov_net))/(1-0.15) #chargement
-  
-  data_ag$net_loss = data_ag$perte - data_ag$recov_net
-  cout_reass = (1-0.33)*(prime_tech - prime_pure)
-  capital_gain = (quantile(data_ag$perte, 0.995)-mean(data_ag$perte)) - (quantile(data_ag$net_loss, 0.995)-mean(data_ag$net_loss))
-  val = 0.06*capital_gain-cout_reass 
-  return(list('val' = val,'PP' = prime_pure, 'PT' = prime_tech))
+  cot = prime_pure + prime_tech
+  return(list('cot' = cot,'PP' = prime_pure, 'PT' = prime_tech))
 }
 
 franchise = c(5e6,10e6,30e6,50e6,100e6)
