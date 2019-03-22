@@ -39,6 +39,7 @@ eccomp(f1, do.points=FALSE) # pas mal
 
 #### Question 3 ----
 # a. Simulation
+set.seed(123456)
 N = 10000
 n_bande = nrow(prof)
 # loi uniforme des polices sur les bandes [1-21]
