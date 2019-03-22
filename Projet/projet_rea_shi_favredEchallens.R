@@ -109,10 +109,12 @@ traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
   data$recov = pmin(pmax(data$perte3-franchise, 0), portee)
   data_ag = aggregate(data[,c("perte", "recov")], by=list(data$bande), FUN=sum)
   data_ag$recov_net = pmin(pmax(data_ag$recov,0), portee*(1+nb_reco)) #AAL = (n+1)*b
+  
+  #cotation théorique
   prime_pure = mean(data_ag$recov_net)/(1+mean(data_ag$recov_net)/portee*taux_reco)
   prime_tech = (prime_pure + 0.2*sd(data_ag$recov_net))/(1-0.15) #chargement
-  cot = prime_pure + prime_tech
-  return(list('cot' = cot,'PP' = prime_pure, 'PT' = prime_tech))
+
+  return(list('PP' = prime_pure, 'PT' = prime_tech))
 }
 
 franchise = c(5e6,10e6,30e6,50e6,100e6)
