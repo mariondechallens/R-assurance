@@ -22,7 +22,7 @@ med = median(loss_endo$LossTotal[loss_endo$LossTotal <= loss_endo$Exposure] /
 library(mbbefd)
 loss_endo$DR = loss_endo$LossTotal / loss_endo$Exposure
 loss_endo2 = subset(loss_endo, loss_endo$DR <=1) #la fonction ne veut pas >= 1
-# il y a une ligne o? le taux depasse 1
+# il y a une ligne ou le taux depasse 1
 f1 =  fitDR(loss_endo2$DR, "mbbefd", method="mle")
 summary(f1)
 
@@ -39,7 +39,7 @@ eccomp(f1, do.points=FALSE) # pas mal
 
 #### Question 3 ----
 # a. Simulation
-set.seed(123456) #toujours la même simu
+set.seed(123456) #toujours la meme simu
 N = 10000
 n_bande = nrow(prof)
 # loi uniforme des polices sur les bandes [1-21]
@@ -65,7 +65,7 @@ for (i in 1:N)
 }
 
 # b. Fit loi de sÃ©vÃ©ritÃ©
-seuil = 5e6 #ou 5e6 selon ce qu'on comprend par "5m"...
+seuil = 5e6
 
 # loss_insured = simu$perte[simu$perte >= seuil]  # pertes brutes dÃ©passant le seuil
 # loss_insured2 = simu$perte2[simu$perte2 >= seuil]
@@ -101,7 +101,7 @@ total_exp_nb2 = (LR*sum(prof$EarnedPremium) / DR_mean) / max(prof$MaxExpo) # = 1
 
 ## sinistres > 5 000 000 euros
 total_exp_seuil = (LR*sum(prof$EarnedPremium[prof$EarnedPremium >=seuil]) / DR_mean_seuil) /
-  max(prof$MaxExpo)  # = 99 sinistres au-delÃ de 5 000 000 euros ?
+  max(prof$MaxExpo)  # = 99 sinistres au-dela de 5 000 000 euros ?
 ##
 prof_seuil = subset(prof, prof$EarnedPremium >=seuil)
 prof_seuil$exp_nb_loss_seuil = LR*prof_seuil$EarnedPremium/DR_mean_seuil/prof_seuil$MaxExpo
@@ -113,7 +113,7 @@ traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
   data_ag = aggregate(data[,c("perte", "recov")], by=list(data$bande), FUN=sum)
   data_ag$recov_net = pmin(pmax(data_ag$recov,0), portee*(1+nb_reco)) #AAL = (n+1)*b
   
-  #cotation théorique
+  #cotation theorique
   prime_pure = mean(data_ag$recov_net)/(1+mean(data_ag$recov_net)/portee*taux_reco)
   prime_tech = (prime_pure + 0.2*sd(data_ag$recov_net))/(1-0.15) #chargement
 
@@ -144,5 +144,5 @@ for (i in 1:5)
   
 }
 
-barplot(PP,names.arg = traite,main = 'Prime pure par traité',col='blue')
-barplot(PT,names.arg = traite,main = 'Prime technique par traité',col='red')
+barplot(PP,names.arg = traite,main = 'Prime pure par traite',col='blue')
+barplot(PT,names.arg = traite,main = 'Prime technique par traite',col='red')
