@@ -55,12 +55,12 @@ plot(ecdf(simu$DR),main = 'ECDF simulation')
 #simu$perte = simu$DR * max(prof$MaxExpo)  # pertes brutes (dénormalisées)
 prof$id_bd = rep(1:21) #
 #simu$perte2 = rep(0,nrow(simu))
-simu$perte3 = rep(0, nrow(simu))
+simu$perte = rep(0, nrow(simu))
 
 for (i in 1:N)
 {
   #simu$perte2[i] = simu$DR[i]*prof$MaxExpo[simu$bande[i]]
-  simu$perte3[i] = simu$DR[i] * (prof$MaxExpo[simu$bande[i]] - prof$MinExpo[simu$bande[i]]) +
+  simu$perte[i] = simu$DR[i] * (prof$MaxExpo[simu$bande[i]] - prof$MinExpo[simu$bande[i]]) +
     prof$MinExpo[simu$bande[i]]
 }
 
@@ -70,7 +70,7 @@ seuil = 5e6 #ou 5e6 selon ce qu'on comprend par "5m"...
 # loss_insured = simu$perte[simu$perte >= seuil]  # pertes brutes dépassant le seuil
 # loss_insured2 = simu$perte2[simu$perte2 >= seuil]
 
-loss_insured3 = simu$perte3[simu$perte3 >= seuil]
+loss_insured = simu$perte[simu$perte >= seuil]
 
 library(eva)
 
@@ -80,35 +80,36 @@ library(eva)
 # 
 # mle_fit2 = gpdFit(loss_insured2, threshold = seuil, method = "mle") # estimation des coeffs du GPD
 # q = seq(1e-10, 1 - 1e-10, by=1/length(loss_insured2))  #0 et 1 n'existent pas pour le quantile !
-# qqplot(simu$perte, qgpd(q, loc=seuil, scale=mle_fit2$par.ests[1], shape=mle_fit2$par.ests[2]))
+# qqplot(simu$perte2, qgpd(q, loc=seuil, scale=mle_fit2$par.ests[1], shape=mle_fit2$par.ests[2]))
 
-mle_fit3 = gpdFit(loss_insured3, threshold = seuil, method = "mle") # estimation des coeffs du GPD
-q = seq(1e-10, 1 - 1e-10, by=1/length(loss_insured3))  #0 et 1 n'existent pas pour le quantile !
-qqplot(simu$perte, qgpd(q, loc=seuil, scale=mle_fit3$par.ests[1], shape=mle_fit3$par.ests[2]))
-
+mle_fit = gpdFit(loss_insured, threshold = seuil, method = "mle") # estimation des coeffs du GPD
+q = seq(1e-10, 1 - 1e-10, by=1/length(loss_insured))  #0 et 1 n'existent pas pour le quantile !
+qqplot(simu$perte, qgpd(q, loc=seuil, scale=mle_fit$par.ests[1], shape=mle_fit$par.ests[2]),main = 'QQplot loi de Pareto generalisee',ylab = '')
+abline(0,1)
 ### FIN PARTIE 3B AVEC PERTES BRUTES ###
 
 #c. Loss Ratio
 LR = 0.7
 DR_mean = mean(simu$DR)
 DR_med = median(simu$DR)
+DR_mean_seuil = mean(subset(simu,simu$perte >=seuil)$DR)
 # prof$exp_nb_loss = LR*prof$EarnedPremium/DR_mean
 # total_exp_nb = mean(prof$exp_nb_loss)
 
-total_exp_nb2 = (LR*sum(prof$EarnedPremium) / DR_mean) / max(prof$MaxExpo) # = 146
+total_exp_nb2 = (LR*sum(prof$EarnedPremium) / DR_mean) / max(prof$MaxExpo) # = 112
 
 ## sinistres > 5 000 000 euros
-total_exp_seuil = (LR*sum(prof$EarnedPremium) / mean(simu$DR[simu$perte > 5e6])) /
-  max(prof$MaxExpo)  # = 4 sinistres au-delà de 5 000 000 euros
+total_exp_seuil = (LR*sum(prof$EarnedPremium[prof$EarnedPremium >=seuil]) / DR_mean_seuil) /
+  max(prof$MaxExpo)  # = 99 sinistres au-del� de 5 000 000 euros ?
 ##
 
-# DR_mean_seuil = mean(subset(simu,simu$perte >=seuil)$DR)
+
 # prof$exp_nb_loss_seuil = LR*prof$EarnedPremium/DR_mean_seuil
 
 #d. cotation, prime pure et prime tech
 traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
-  data$recov = pmin(pmax(data$perte3-franchise, 0), portee)
-  data_ag = aggregate(data[,c("perte3", "recov")], by=list(data$bande), FUN=sum)
+  data$recov = pmin(pmax(data$perte-franchise, 0), portee)
+  data_ag = aggregate(data[,c("perte", "recov")], by=list(data$bande), FUN=sum)
   data_ag$recov_net = pmin(pmax(data_ag$recov,0), portee*(1+nb_reco)) #AAL = (n+1)*b
   
   #cotation th�orique
