@@ -93,8 +93,9 @@ LR = 0.7
 DR_mean = mean(simu$DR)
 DR_med = median(simu$DR)
 DR_mean_seuil = mean(subset(simu,simu$perte >=seuil)$DR)
-# prof$exp_nb_loss = LR*prof$EarnedPremium/DR_mean
-# total_exp_nb = mean(prof$exp_nb_loss)
+
+prof$exp_nb_loss =(LR*prof$EarnedPremium/DR_mean)/prof$MaxExpo
+total_exp_nb = mean(prof$exp_nb_loss) #126
 
 total_exp_nb2 = (LR*sum(prof$EarnedPremium) / DR_mean) / max(prof$MaxExpo) # = 112
 
@@ -102,9 +103,9 @@ total_exp_nb2 = (LR*sum(prof$EarnedPremium) / DR_mean) / max(prof$MaxExpo) # = 1
 total_exp_seuil = (LR*sum(prof$EarnedPremium[prof$EarnedPremium >=seuil]) / DR_mean_seuil) /
   max(prof$MaxExpo)  # = 99 sinistres au-delÃ de 5 000 000 euros ?
 ##
-
-
-# prof$exp_nb_loss_seuil = LR*prof$EarnedPremium/DR_mean_seuil
+prof_seuil = subset(prof, prof$EarnedPremium >=seuil)
+prof_seuil$exp_nb_loss_seuil = LR*prof_seuil$EarnedPremium/DR_mean_seuil/prof_seuil$MaxExpo
+total_nb_seuil_bis = mean(prof_seuil$exp_nb_loss_seuil) #88
 
 #d. cotation, prime pure et prime tech
 traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
