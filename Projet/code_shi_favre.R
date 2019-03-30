@@ -137,6 +137,6 @@ for (i in 1:5)
   
 }
 
-# Diagrammes en barre
-barplot(PP,names.arg = traite,main = 'Prime pure par traite',col='blue')
-barplot(PT,names.arg = traite,main = 'Prime technique par traite',col='red')
+# Diagrammes en barres
+barplot(PP,names.arg = traite,main = 'Prime pure par traite',col='blue', ylim=c(0,30e6))
+barplot(PT,names.arg = traite,main = 'Prime technique par traite',col='red', ylim=c(0,40e6))
