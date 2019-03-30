@@ -97,8 +97,9 @@ total_exp_nb2 = sum(prof4$exp_nb_loss)
 print('Nb total de sinistres > seuil')
 print(round(total_exp_nb2))
 
-#d. cotation, prime pure et prime tech
+#d. cotation, prime pure et prime technique
 
+#Fonction de calcul de la cotation theorique d'un traite
 traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
   data$recov = pmin(pmax(data$perte-franchise, 0), portee)
   data_ag = aggregate(data[,c("perte", "recov")], by=list(data$bande), FUN=sum)
@@ -111,6 +112,7 @@ traiteXS = function(data, franchise, portee, nb_reco, taux_reco){
   return(list('PP' = prime_pure, 'PT' = prime_tech))
 }
 
+# Application aux donnees de l enonce
 franchise = c(5e6,10e6,30e6,50e6,100e6)
 franchise2 = c(5,10,30,50,100)
 
@@ -135,5 +137,6 @@ for (i in 1:5)
   
 }
 
+# Diagrammes en barre
 barplot(PP,names.arg = traite,main = 'Prime pure par traite',col='blue')
 barplot(PT,names.arg = traite,main = 'Prime technique par traite',col='red')
